@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/larskuhtz/cuckoo.svg?branch=master)](https://travis-ci.org/larskuhtz/cuckoo)
+
 Haskell implementation of Cuckoo filters as described in
 
 [B. Fan, D.G. Anderson, M. Kaminsky, M.D. Mitzenmacher. Cuckoo Filter:

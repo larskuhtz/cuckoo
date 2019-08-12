@@ -31,6 +31,7 @@ copyright: Copyright (c) 2019, Lars Kuhtz <lakuhtz@gmail.com>
 category: Data
 tested-with:
       GHC==8.6.5
+      GHC==8.4.4
 extra-source-files:
     README.md
     CHANGELOG.md
