@@ -58,7 +58,6 @@ import Data.Bool
 import Data.Kind
 import Data.Maybe
 import Data.Primitive.ByteArray
-import qualified Data.Vector as V
 
 import Foreign
 
@@ -68,7 +67,7 @@ import Numeric.Natural
 
 import Prelude hiding (null)
 
-import qualified System.Random.MWC as MWC
+import System.Random.Internal
 
 import Text.Printf
 
@@ -153,7 +152,7 @@ data CuckooFilter s (b :: Nat) (f :: Nat) (a :: Type)
     = CuckooFilter
         { _cfBucketCount :: {-# UNPACK #-} !Int
         , _cfSalt :: {-# UNPACK #-} !Salt
-        , _cfRng :: {-# UNPACK #-} !(MWC.Gen s)
+        , _cfRng :: {-# UNPACK #-} !(Gen s)
         , _cfData :: {-# UNPACK #-} !(MutableByteArray s)
         }
 
@@ -197,7 +196,7 @@ newCuckooFilter salt n = do
     arr <- newByteArray bytes
     fillByteArray arr 0 bytes 0
     CuckooFilter buckets salt
-        <$> MWC.initialize (V.singleton $ int salt)
+        <$> initialize (int salt)
         <*> pure arr
   where
     minBuckets = fit n (w @b) -- minimum number of buckets match requested capacity
@@ -267,7 +266,7 @@ insert f a = do
                 x -> return x
     {-# INLINE kick #-}
 
-    randomSlot = Slot <$> MWC.uniformR (0, w @b - 1) (_cfRng f)
+    randomSlot = Slot <$> uniformR (0, w @b - 1) (_cfRng f)
     {-# INLINE randomSlot #-}
 
     swapFingerprint b i k = do
@@ -447,7 +446,7 @@ getBucketsRandom
     => CuckooFilter (PrimState m) b f a
     -> a
     -> m (Bucket, Bucket, Fingerprint f)
-getBucketsRandom f a = bool (b1, b2, fp) (b2, b1, fp) <$> MWC.uniform rng
+getBucketsRandom f a = bool (b1, b2, fp) (b2, b1, fp) <$> uniform rng
   where
     salt = _cfSalt f
     rng = _cfRng f

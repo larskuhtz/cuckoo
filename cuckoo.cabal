@@ -40,20 +40,56 @@ source-repository head
     type: git
     location: https://github.com/larskuhtz/cuckoo.git
 
+flag mwc-random
+    description: Use mwc-random instead of the random package
+    manual: True
+    default: False
+
+flag pcg-random
+    description: Use pcg-random instead of the random package
+    manual: True
+    default: False
+
+library random-internal
+    hs-source-dirs: lib/random
+    default-language: Haskell2010
+    exposed-modules:
+        System.Random.Internal
+    ghc-options:
+        -Wall
+    build-depends:
+          base >=4.11 && <4.15
+        , primitive >=0.7
+
+    if flag(pcg-random)
+        build-depends:
+            pcg-random >=0.1
+        cpp-options: -DRANDOM_PCG
+    elif flag(mwc-random)
+        build-depends:
+            mwc-random >=0.14
+          , vector >=0.12
+        cpp-options: -DRANDOM_MWC
+    else
+        build-depends:
+            random >=1.1
+
 library
     hs-source-dirs: src
     default-language: Haskell2010
     ghc-options:
         -Wall
     exposed-modules:
-          Data.Cuckoo
-          Data.Cuckoo.Internal
+        Data.Cuckoo
+        Data.Cuckoo.Internal
     build-depends:
-          base >=4.10 && <4.15
-        , memory >= 0.14
-        , mwc-random >= 0.14
-        , primitive >= 0.7
-        , vector >= 0.12
+          random-internal
+
+        -- external
+        , base >=4.11 && <4.15
+        , memory >=0.14
+        , primitive >=0.7
+        , vector >=0.12
 
 test-suite tests
     type: exitcode-stdio-1.0
@@ -68,15 +104,15 @@ test-suite tests
     build-depends:
         -- internal
           cuckoo
+        , random-internal
 
         -- external
-        , base >=4.10 && <4.15
-        , bytestring >= 0.10
-        , cryptonite >= 0.26
-        , hashable >= 1.3
-        , memory >= 0.14
-        , mwc-random >= 0.14
-        , stopwatch >= 0.1
+        , base >=4.11 && <4.15
+        , bytestring >=0.10
+        , cryptonite >=0.26
+        , hashable >=1.3
+        , memory >=0.14
+        , stopwatch >=0.1
 
 benchmark spellchecker
     type: exitcode-stdio-1.0
@@ -93,10 +129,10 @@ benchmark spellchecker
           cuckoo
 
         -- external
-        , base >=4.10 && <4.15
-        , bytestring >= 0.10
-        , memory >= 0.14
-        , stopwatch >= 0.1
+        , base >=4.11 && <4.15
+        , bytestring >=0.10
+        , memory >=0.14
+        , stopwatch >=0.1
 
 -- benchmark benchmarks
 --     type: exitcode-stdio-1.0
