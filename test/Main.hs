@@ -43,7 +43,7 @@ import Foreign
 import Numeric.Natural
 
 import System.IO.Unsafe
-import qualified System.Random.MWC as MWC
+import System.Random.Internal
 
 -- internal modules
 
@@ -132,13 +132,13 @@ instance CuckooFilterHash Crypto where
 
 -- | Fill with random items until first insert failure
 --
-test0 :: forall a . MWC.Variate a => CuckooFilterHash a => Natural -> IO TestResult
+test0 :: forall a . Variate a => CuckooFilterHash a => Natural -> IO TestResult
 test0 n = do
-    rng <- MWC.createSystemRandom
-    s <- Salt <$> MWC.uniform rng
+    rng <- initialize 0
+    s <- Salt <$> uniform rng
     f <- newCuckooFilter @IO @4 @10 @a s n
     let go i fp = do
-            x <- MWC.uniform rng
+            x <- uniform rng
             fp' <- bool fp (succ fp) <$> member f x
             insert f x >>= \case
                 True -> go (succ i) fp'
@@ -153,8 +153,8 @@ test0 n = do
 --
 test1 :: forall a . CuckooFilterHash a => Num a => Natural -> IO TestResult
 test1 n = do
-    rng <- MWC.createSystemRandom
-    s <- Salt <$> MWC.uniform rng
+    rng <- initialize 0
+    s <- Salt <$> uniform rng
     f <- newCuckooFilter @IO @4 @10 @a s n
     let go i fp = do
             let x = int i
@@ -172,8 +172,8 @@ test1 n = do
 --
 test2 :: forall a . CuckooFilterHash a => BA.ByteArray a => Natural -> IO TestResult
 test2 n = do
-    rng <- MWC.createSystemRandom
-    s <- Salt <$> MWC.uniform rng
+    rng <- initialize 0
+    s <- Salt <$> uniform rng
     f <- newCuckooFilter @IO @4 @10 @a s n
     let go i fp = do
             let x = BA.pack (castEnum <$> show i)
@@ -191,8 +191,8 @@ test2 n = do
 --
 test3 :: forall a . CuckooFilterHash a => BA.ByteArray a => Natural -> IO TestResult
 test3 n = do
-    rng <- MWC.createSystemRandom
-    s <- Salt <$> MWC.uniform rng
+    rng <- initialize 0
+    s <- Salt <$> uniform rng
     f <- newCuckooFilter @IO @4 @10 @a s n
     let go i x fp
             | int i >= int @_ @Double n * 95 / 100 = return (i, x, fp)
