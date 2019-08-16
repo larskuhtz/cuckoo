@@ -22,7 +22,9 @@ module Data.Cuckoo.Internal
 ( w
 , int
 , fit
+, intFit
 , nextPowerOfTwo
+, intNextPowerOfTwo
 , set
 , get
 
@@ -71,12 +73,32 @@ fit :: Real a => Real b => Integral c => a -> b -> c
 fit a b = ceiling @Double $ realToFrac a / realToFrac b
 {-# INLINE fit #-}
 
+-- | @fit a b@ computes how many @b@s are needed to fit @a@, i.e.
+-- \(\ceil (\frac{a}{b})\).
+--
+-- For instance,
+--
+-- prop> fit 7 3 == 3
+-- prop> fit 6 3 == 2
+--
+intFit :: Integral a => Integral b => a -> b -> a
+intFit a b = 1 + (a - 1) `div` int b
+{-# INLINE intFit #-}
+
 -- | @nextPowerOfTwo a@ computes the smallest power of two that is larger or
 -- equal than @a@.
 --
 nextPowerOfTwo :: Real a => Integral b => a -> b
 nextPowerOfTwo x = 2 ^ ceiling @Double @Int (logBase 2 $ realToFrac x)
 {-# INLINE nextPowerOfTwo #-}
+
+-- | @nextPowerOfTwo a@ computes the smallest power of two that is larger or
+-- equal than @a@.
+--
+intNextPowerOfTwo :: Int -> Int
+intNextPowerOfTwo 0 = 1
+intNextPowerOfTwo x = 1 `unsafeShiftL` (finiteBitSize x - countLeadingZeros (x - 1))
+{-# INLINE intNextPowerOfTwo #-}
 
 -- | Computes a 64 bit Fnv1a hash for a value that has an 'Storable' instance.
 --

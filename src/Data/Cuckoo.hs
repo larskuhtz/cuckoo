@@ -199,10 +199,10 @@ newCuckooFilter salt n = do
         <$> initialize (int salt)
         <*> pure arr
   where
-    minBuckets = fit n (w @b) -- minimum number of buckets match requested capacity
-    buckets = nextPowerOfTwo @Int minBuckets -- actual number of buckets
+    minBuckets = intFit n (w @b) -- minimum number of buckets match requested capacity
+    buckets = intNextPowerOfTwo (int minBuckets) -- actual number of buckets
     items = w @b * buckets -- actual capacity (in number of items)
-    bytes = fit @Int @Int (w @f * items) 8 + 4 -- total number of allocated bytes
+    bytes = intFit @_ @Int (w @f * items) 8 + 4 -- total number of allocated bytes
 
         -- we add 4 extra bytes to avoid having to deal with corner cases when
         -- reading and writing fingerprints that are not aligned to Word32 at
@@ -484,7 +484,7 @@ capacityInItems f = _cfBucketCount f * w @b
 -- | The total number of bytes allocated for storing items in the filter.
 --
 sizeInAllocatedBytes :: forall s b f a . KnownNat f => KnownNat b => CuckooFilter s b f a -> Int
-sizeInAllocatedBytes f = fit @Int @Int (capacityInItems f * w @f) 8
+sizeInAllocatedBytes f = intFit @_ @Int (capacityInItems f * w @f) 8
 {-# INLINE sizeInAllocatedBytes #-}
 
 -- | Number of items currently stored in the filter.
@@ -538,7 +538,7 @@ showFilter
 showFilter f = forM [0.. _cfBucketCount f - 1] $ \(i :: Int) -> do
         forM [0 .. w @b - 1] $ \(j :: Int) -> do
             Fingerprint fp <- readFingerprint f (Bucket i) (Slot j)
-            return $ printf ("%0" <> show (fit @Int @Int @Int (w @f) 8) <> "x") fp
+            return $ printf ("%0" <> show (intFit @_ @Int (w @f) 8) <> "x") fp
 
 -- | Returns the different hashes that are associated with an item in the
 -- filter. Used for debugging purposes.
