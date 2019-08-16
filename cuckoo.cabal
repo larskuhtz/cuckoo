@@ -134,25 +134,25 @@ benchmark spellchecker
         , memory >=0.14
         , stopwatch >=0.1
 
--- benchmark benchmarks
---     type: exitcode-stdio-1.0
---     hs-source-dirs: bench
---     default-language: Haskell2010
---     ghc-options:
---         -Wall
---         -rtsopts
---         -threaded
---         -with-rtsopts=-N
---         -O2
---     main-is: Main.hs
---     build-depends:
---         -- internal
---           cuckoo
---
---         -- external
---         , base >=4.10 && <4.15
---         , bytestring >= 0.10
---         , cryptonite >= 0.26
---         , memory >= 0.14
---         , mwc-random >= 0.14
+benchmark internal-benchmarks
+    type: exitcode-stdio-1.0
+    hs-source-dirs: bench
+    main-is: Internal.hs
+    default-language: Haskell2010
+    ghc-options:
+        -Wall
+        -rtsopts
+        -threaded
+        -with-rtsopts=-N
+        -O2
+        -mbmi2
+        -msse4.2
+    build-depends:
+        -- internal
+          cuckoo
+
+        -- external
+        , QuickCheck >= 2.13
+        , base >=4.10 && <4.15
+        , criterion >= 1.5
 
