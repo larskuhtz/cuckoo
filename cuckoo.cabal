@@ -144,7 +144,6 @@ benchmark internal-benchmarks
         -rtsopts
         -threaded
         -with-rtsopts=-N
-        -O2
         -mbmi2
         -msse4.2
     build-depends:
