@@ -10,7 +10,7 @@
 -- |
 -- Module: Data.Cuckoo.Internal
 -- Copyright: Copyright © 2019 Lars Kuhtz <lakuhtz@gmail.com>
--- License: MIT
+-- License: BSD3
 -- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 -- Stability: experimental
 --
@@ -62,7 +62,7 @@ int = fromIntegral
 {-# INLINE int #-}
 
 -- | @fit a b@ computes how many @b@s are needed to fit @a@, i.e.
--- \(\ceil (\frac{a}{b})\).
+-- \(\left\lceil\frac{a}{b}\right\rceil\).
 --
 -- For instance,
 --
@@ -74,7 +74,7 @@ fit a b = ceiling @Double $ realToFrac a / realToFrac b
 {-# INLINE fit #-}
 
 -- | @fit a b@ computes how many @b@s are needed to fit @a@, i.e.
--- \(\ceil (\frac{a}{b})\).
+-- \(\left\lceil\frac{a}{b}\right\rceil\).
 --
 -- For instance,
 --

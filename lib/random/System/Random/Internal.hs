@@ -8,7 +8,7 @@
 -- |
 -- Module: System.Random.Internal
 -- Copyright: Copyright © 2019 Lars Kuhtz <lakuhtz@gmail.com>
--- License: MIT
+-- License: BSD3
 -- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 -- Stability: experimental
 --

@@ -14,5 +14,10 @@ false negative results.
 
 Unlike Bloom filters, Cuckoo filters maintain an upper bound on the false
 positive rate that is independent of the load of the filter. However, insertion
-of new elements in the filter can fail. For typical configurations, this
+of new elements in the filter can fail. For typical configurations this
 probability is very small for load factors smaller than 90 percent.
+
+The implementation allows the user to specify the bucket size and the fingerprint
+size in addition to the capacity of the filter. The user can also provide custom
+functions for computing the primary hash and fingerprint.
+

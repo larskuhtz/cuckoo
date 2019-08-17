@@ -4,11 +4,11 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- |
--- module: main
--- copyright: copyright © 2019 lars kuhtz <lakuhtz@gmail.com>
--- license: mit
--- maintainer: lars kuhtz <lakuhtz@gmail.com>
--- stability: experimental
+-- Module: Main
+-- Copyright: Copyright © 2019 Lars Kuhtz <lakuhtz@gmail.com>
+-- License: BSD3
+-- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
+-- Stability: experimental
 --
 -- This code is an adaptation of the respective code from Chris Coffey's cuckoo filter package,
 -- which in turn is borrowed from Bryan O'Sullivan's bloom filter package.

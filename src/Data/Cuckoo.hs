@@ -10,11 +10,25 @@
 -- |
 -- Module: Data.Cuckoo
 -- Copyright: Copyright © 2019 Lars Kuhtz <lakuhtz@gmail.com>
--- License: MIT
+-- License: BSD3
 -- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 -- Stability: experimental
 --
--- Cuckoo Filters
+-- Haskell implementation of Cuckoo filters as described in
+--
+-- <https://www.cs.cmu.edu/~dga/papers/cuckoo-conext2014.pdf B. Fan, D.G. Anderson, M. Kaminsky, M.D. Mitzenmacher. Cuckoo Filter: Practically Better Than Bloom. In Proc. CoNEXT, 2014.>
+--
+-- Cuckoo filters are a data structure for probabilistic set membership. They
+-- support insertion, deletion, and membership queries for set elements.
+--
+-- Membership queries may return false positive results. But queries don't
+-- return false negative results.
+--
+-- Unlike Bloom filters, Cuckoo filters maintain an upper bound on the false
+-- positive rate that is independent of the load of the filter. However,
+-- insertion of new elements in the filter can fail. For typical
+-- configurations this probability is very small for load factors smaller than
+-- 90 percent.
 --
 module Data.Cuckoo
 (
@@ -113,7 +127,7 @@ newtype Salt = Salt Int
 class CuckooFilterHash a where
 
     -- | This function must provide good entropy on the lower
-    -- @2^bucketnumber - 1@ bits of the result.
+    -- \(2^b - 1\) bits of the result, where \(b\) is the number of buckets.
     --
     cuckooHash :: Salt -> a -> Word64
 
@@ -135,10 +149,10 @@ class CuckooFilterHash a where
 
 -- | Cuckoo Filter with
 --
--- * State token @s@,
--- * bucket size @b@,
--- * fingerprint size @f@, and
--- * and content types @a@.
+-- * State token @s :: Type@,
+-- * bucket size @b :: Nat@,
+-- * fingerprint size @f :: Nat@, and
+-- * content type @a :: Type@.
 --
 -- The following constraints apply
 --
@@ -162,18 +176,23 @@ type CuckooFilterIO b f a = CuckooFilter RealWorld b f a
 
 -- | Create a new Cuckoo filter that has at least the given capacity.
 --
--- * State token @s@,
--- * bucket size @b@,
--- * fingerprint size @f@, and
--- * and content types @a@.
+-- The type parameters are
 --
--- The following constraints apply
+-- * bucket size @b :: Nat@,
+-- * fingerprint size @f :: Nat@,
+-- * content type @a :: Type@, and
+-- * Monad @m :: Type -> Type@,
 --
--- * \(0 < f \leq 32\)
--- * \(0 < b\)
+-- Enabling the `TypeApplications` language extension provides a convenient way
+-- for passing the type parameters to the function.
+--
+-- The following constraints apply:
+--
+-- * \(0 < f \leq 32\),
+-- * \(0 < b\).
 --
 -- The false positive rate depends mostly on the value of @f@. It is bounded
--- from above by \(2b / 2^f\). In most cases @4@ is a good choice for @b@.
+-- from above by \(\frac{2b}{2^f}\). In most cases @4@ is a good choice for @b@.
 --
 -- Actual performance depends on the choice of good hash functions that provide
 -- high uniformity on the lower bits.
@@ -238,7 +257,7 @@ newCuckooFilter salt n = do
 -- it should be apprioriately masked.
 --
 insert
-    :: forall m b f a
+    :: forall b f a m
     . KnownNat f
     => KnownNat b
     => PrimMonad m
@@ -283,7 +302,7 @@ insert f a = do
 --
 -- A negative result means that the item is definitively not in the set. A
 -- positive result means that the item is most likely in the set. The rate of
--- false positives is bounded from above by \(2b / 2^f\) where @b@ is the number
+-- false positives is bounded from above by \(\frac{2b}{2^f}\) where @b@ is the number
 -- of items per bucket and @f@ is the size of a fingerprint in bits.
 --
 member
@@ -389,7 +408,7 @@ ix (Bucket i) = i
 -- alignment.
 --
 readFingerprint
-    :: forall m b f a
+    :: forall b f a m
     . KnownNat f
     => KnownNat b
     => PrimMonad m
@@ -410,7 +429,7 @@ readFingerprint f n (Slot i) = do
 {-# INLINE readFingerprint #-}
 
 setFingerprint
-    :: forall m b f a
+    :: forall b f a m
     . KnownNat f
     => KnownNat b
     => PrimMonad m
@@ -456,7 +475,7 @@ getBucketsRandom f a = bool (b1, b2, fp) (b2, b1, fp) <$> uniform rng
 {-# INLINE getBucketsRandom #-}
 
 checkBucket
-    :: forall m b f a
+    :: forall b f a m
     . PrimMonad m
     => KnownNat f
     => KnownNat b
@@ -477,22 +496,22 @@ checkBucket f b fp = go (w @b - 1)
 -- | Total number of items that the filter can hold. In practice a load factor
 -- of ~95% of this number can be reached.
 --
-capacityInItems :: forall s b f a . KnownNat b => CuckooFilter s b f a -> Int
+capacityInItems :: forall b f a s . KnownNat b => CuckooFilter s b f a -> Int
 capacityInItems f = _cfBucketCount f * w @b
 {-# INLINE capacityInItems #-}
 
 -- | The total number of bytes allocated for storing items in the filter.
 --
-sizeInAllocatedBytes :: forall s b f a . KnownNat f => KnownNat b => CuckooFilter s b f a -> Int
+sizeInAllocatedBytes :: forall b f a s . KnownNat f => KnownNat b => CuckooFilter s b f a -> Int
 sizeInAllocatedBytes f = intFit @_ @Int (capacityInItems f * w @f) 8
 {-# INLINE sizeInAllocatedBytes #-}
 
 -- | Number of items currently stored in the filter.
 --
--- /Note/ that computing this number is expensive ( \(O(n)\) ).
+-- /Note/ that computing this number is expensive \(\mathcal{O}(n)\).
 --
 itemCount
-    :: forall m b f a
+    :: forall b f a m
     . PrimMonad m
     => KnownNat b
     => KnownNat f
@@ -510,10 +529,10 @@ itemCount f = foldM (\x i -> foldM (\x' j -> go x' (Bucket i) (Slot j)) x [0.. w
 -- loadFactor f = 100 * itemCount f / capacityInItems
 -- @
 --
--- /Note/ that computing this number is expensive ( \(O(n)\) ).
+-- /Note/ that computing this number is expensive \(\mathcal{O}(n)\).
 --
 loadFactor
-    :: forall m b f a
+    :: forall b f a m
     . PrimMonad m
     => KnownNat b
     => KnownNat f
@@ -544,7 +563,7 @@ showFilter f = forM [0.. _cfBucketCount f - 1] $ \(i :: Int) -> do
 -- filter. Used for debugging purposes.
 --
 itemHashes
-    :: forall s b f a
+    :: forall b f a s
     . KnownNat f
     => CuckooFilterHash a
     => CuckooFilter s b f a
