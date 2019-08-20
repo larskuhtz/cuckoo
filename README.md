@@ -21,3 +21,60 @@ The implementation allows the user to specify the bucket size and the fingerprin
 size in addition to the capacity of the filter. The user can also provide custom
 functions for computing the primary hash and fingerprint.
 
+## Installation
+
+```bash
+cabal v2-install cuckoo
+```
+
+For running the test-suites
+
+```bash
+cabal v2-test cuckoo
+```
+
+For running the benchmarks
+
+```bash
+cabal v2-bench cuckoo
+```
+
+## Example
+
+```haskell
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
+
+import Control.Monad (filterM)
+import Data.Cuckoo
+import Data.List ((\\))
+
+-- Define CuckooFilterHash instance (this uses the default implementation)
+instance CuckooFilterHash Int
+
+main :: IO ()
+main = do
+    -- Create Filter for a minimum of 500000 entries
+    f <- newCuckooFilter @4 @8 @Int 0 500000
+
+    -- Insert 450000 items
+    failed <- filterM (fmap not . insert f) [0..450000]
+
+    -- Query inserted items
+    missing <- filterM (fmap not . member f) [0..450000]
+
+    -- Report results
+    putStrLn $ "failed inserts: " <> show (length failed)
+    putStrLn $ "FAILURE: missing " <> show (length $ missing \\ failed)
+    putStrLn $ "false positives: " <> show (length $ failed \\ missing)
+    c <- itemCount f
+    putStrLn $ "item count: " <> show c
+    putStrLn $ "capacity: " <> show (capacityInItems f)
+    lf <- loadFactor f
+    putStrLn $ "load factor: " <> show lf
+    putStrLn $ "size in allocated bytes: " <> show (sizeInAllocatedBytes f)
+```
+
+Another example can be found the file `bench/SpellChecker.hs`.
+
