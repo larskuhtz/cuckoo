@@ -201,7 +201,7 @@ type CuckooFilterIO b f a = CuckooFilter RealWorld b f a
 -- actual bucket count is a power of two.
 --
 newCuckooFilter
-    :: forall m b f a
+    :: forall b f a m
     . KnownNat b
     => KnownNat f
     => PrimMonad m
