@@ -149,7 +149,7 @@ sip
     -> Word64
 sip s x = r
   where
-    Right (BA.SipHash r) = BA.sipHash (BA.SipKey (int s) 23)
+    Right (BA.SipHash r) = BA.sipHash (BA.SipKey (int s) 914279)
         <$> BA.fill @BA.Bytes (sizeOf x) (BA.putStorable x)
 {-# INLINE sip #-}
 
@@ -168,7 +168,7 @@ sip_bytes
     -> Word64
 sip_bytes s x = r
   where
-    Right (BA.SipHash r) = BA.sipHash (BA.SipKey (int s) 23)
+    Right (BA.SipHash r) = BA.sipHash (BA.SipKey (int s) 1043639)
         <$> BA.fill @BA.Bytes (BA.length x) (BA.putBytes x)
 {-# INLINE sip_bytes #-}
 
@@ -179,7 +179,7 @@ sip_bytes s x = r
 sip2 :: Storable a => Int -> a -> Word64
 sip2 s x = r
   where
-    Right (BA.SipHash r) = BA.sipHash (BA.SipKey 61 (int s * 17))
+    Right (BA.SipHash r) = BA.sipHash (BA.SipKey 994559 (int s * 713243))
         <$> BA.fill @BA.Bytes (sizeOf x) (BA.putStorable x)
 {-# INLINE sip2 #-}
 
