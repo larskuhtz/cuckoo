@@ -503,7 +503,7 @@ capacityInItems f = _cfBucketCount f * w @b
 -- | The total number of bytes allocated for storing items in the filter.
 --
 sizeInAllocatedBytes :: forall b f a s . KnownNat f => KnownNat b => CuckooFilter s b f a -> Int
-sizeInAllocatedBytes f = intFit @_ @Int (capacityInItems f * w @f) 8
+sizeInAllocatedBytes f = intFit @_ @Int (capacityInItems f * w @f) 8 + 4
 {-# INLINE sizeInAllocatedBytes #-}
 
 -- | Number of items currently stored in the filter.
