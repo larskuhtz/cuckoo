@@ -189,7 +189,8 @@ type CuckooFilterIO b f a = CuckooFilter RealWorld b f a
 -- The following constraints apply:
 --
 -- * \(0 < f \leq 32\),
--- * \(0 < b\).
+-- * \(0 < b\), and
+-- * \(64 \leq n\), where \(n\) is the requested size.
 --
 -- The false positive rate depends mostly on the value of @f@. It is bounded
 -- from above by \(\frac{2b}{2^f}\). In most cases @4@ is a good choice for @b@.
@@ -206,9 +207,9 @@ newCuckooFilter
     => KnownNat f
     => PrimMonad m
     => Salt
-        -- ^ Salt for the hash functions
+        -- ^ Salt for the hash functions.
     -> Natural
-        -- ^ Size (must be positive)
+        -- ^ Size. Must be at least 64.
     -> m (CuckooFilter (PrimState m) b f a)
 newCuckooFilter salt n = do
     check
@@ -232,7 +233,7 @@ newCuckooFilter salt n = do
         | not (w @f <= 32) = error "Fingerprint size must not be larger than 32"
         | not (0 < w @b) = error "Bucket size (items per bucket) must be positive"
         | not (0 < n) = error "The size (number of items) of the filter must be positive"
-        | not (32 <= int n * w @f) = error "Seriously? Are you kidding me? If you need to represent such a tiny set, you'll have to pick another data structure for that"
+        | not (64 <= n) = error "Seriously? Are you kidding me? If you need to represent such a tiny set, you'll have to pick another data structure for that"
         | otherwise = return ()
 
 -- -------------------------------------------------------------------------- --
