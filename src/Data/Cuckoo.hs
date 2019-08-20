@@ -30,6 +30,41 @@
 -- configurations this probability is very small for load factors smaller than
 -- 90 percent.
 --
+-- = Example
+--
+-- > {-# LANGUAGE DataKinds #-}
+-- > {-# LANGUAGE TypeApplications #-}
+-- > {-# LANGUAGE TypeFamilies #-}
+-- >
+-- > import Control.Monad (filterM)
+-- > import Data.Cuckoo
+-- > import Data.List ((\\))
+-- >
+-- > -- Define CuckooFilterHash instance (this uses the default implementation)
+-- > instance CuckooFilterHash Int
+-- >
+-- > main :: IO ()
+-- > main = do
+-- >     -- Create Filter for a minimum of 500000 entries
+-- >     f <- newCuckooFilter @4 @8 @Int 0 500000
+-- >
+-- >     -- Insert 450000 items
+-- >     failed <- filterM (fmap not . insert f) [0..450000]
+-- >
+-- >     -- Query inserted items
+-- >     missing <- filterM (fmap not . member f) [0..450000]
+-- >
+-- >     -- Report results
+-- >     putStrLn $ "failed inserts: " <> show (length failed)
+-- >     putStrLn $ "FAILURE: missing " <> show (length $ missing \\ failed)
+-- >     putStrLn $ "false positives: " <> show (length $ failed \\ missing)
+-- >     c <- itemCount f
+-- >     putStrLn $ "item count: " <> show c
+-- >     putStrLn $ "capacity: " <> show (capacityInItems f)
+-- >     lf <- loadFactor f
+-- >     putStrLn $ "load factor: " <> show lf
+-- >     putStrLn $ "size in allocated bytes: " <> show (sizeInAllocatedBytes f)
+--
 module Data.Cuckoo
 (
 -- * Hash Functions
@@ -89,6 +124,10 @@ import Text.Printf
 
 import Data.Cuckoo.Internal
 
+-- $setup
+-- >>> :set -XTypeApplications -XDataKinds -XTypeFamilies
+-- >>> instance CuckooFilterHash Int
+
 -- -------------------------------------------------------------------------- --
 -- Hash Functions
 
@@ -122,7 +161,21 @@ newtype Salt = Salt Int
 -- * provide good uniformity on the lower bits of the output.
 --
 -- The default implementations use sip hash for 'cuckooHash' and 'fnv1a' (64
--- bit) for 'cuckooFingerprint'.
+-- bit) for 'cuckooFingerprint' and require an instance of 'Storable'.
+--
+-- >>> instance CuckooFilterHash Int
+--
+-- The following example uses the hash functions that are provided in this
+-- module to define an instance for 'B.ByteString':
+--
+-- >>> import qualified Data.ByteString as B
+-- >>> :{
+-- instance CuckooFilterHash B.ByteString where
+--     cuckooHash (Salt s) a = fnv1a_bytes s a
+--     cuckooFingerprint (Salt s) a = sip_bytes s a
+--     {-# INLINE cuckooHash #-}
+--     {-# INLINE cuckooFingerprint #-}
+-- :}
 --
 class CuckooFilterHash a where
 
@@ -136,10 +189,16 @@ class CuckooFilterHash a where
     --
     cuckooFingerprint :: Salt -> a -> Word64
 
+    -- | Default implementation of 'cuckooHash' for types that are an instance
+    -- of 'Storable'.
+    --
     default cuckooHash :: Storable a => Salt -> a -> Word64
     cuckooHash (Salt s) a = sip s a
     {-# INLINE cuckooHash #-}
 
+    -- | Default implementation of 'cuckooFingerprint' for types that are an
+    -- instance of 'Storable'.
+    --
     default cuckooFingerprint :: Storable a => Salt -> a -> Word64
     cuckooFingerprint (Salt s) a = fnv1a s a
     {-# INLINE cuckooFingerprint #-}
@@ -176,15 +235,18 @@ type CuckooFilterIO b f a = CuckooFilter RealWorld b f a
 
 -- | Create a new Cuckoo filter that has at least the given capacity.
 --
+-- Enabling the @TypeApplications@ language extension provides a convenient way
+-- for passing the type parameters to the function.
+--
+-- >>> :set -XTypeApplications -XDataKinds -XTypeFamilies
+-- >>> newCuckooFilter @4 @10 @Int 0 1000
+--
 -- The type parameters are
 --
 -- * bucket size @b :: Nat@,
 -- * fingerprint size @f :: Nat@,
 -- * content type @a :: Type@, and
 -- * Monad @m :: Type -> Type@,
---
--- Enabling the `TypeApplications` language extension provides a convenient way
--- for passing the type parameters to the function.
 --
 -- The following constraints apply:
 --
@@ -200,6 +262,12 @@ type CuckooFilterIO b f a = CuckooFilter RealWorld b f a
 --
 -- The actual capacity may be much larger than what is requested, because the
 -- actual bucket count is a power of two.
+--
+-- >>> f <- newCuckooFilter @4 @10 @Int 0 600
+-- >>> capacityInItems f
+-- 1024
+-- >>> sizeInAllocatedBytes f
+-- 1284
 --
 newCuckooFilter
     :: forall b f a m
@@ -247,15 +315,26 @@ newCuckooFilter salt n = do
 -- sufficient). Could we also compute the relocation slot from the hash?
 
 -- | Insert an item into the filter and return whether the operation was
--- successful. If insertion fails, the filter is unchanged.
+-- successful. If insertion fails, the filter is unchanged. An item can be
+-- inserted more than once. The return value indicates whether insertion was
+-- successful. The operation can fail when the filter doesn't have enough space
+-- for the item.
 --
 -- This function is not thread safe. No concurrent writes or reads should occur
 -- while this function is executed. If this is needed a lock must be used.
 --
 -- This function is not exception safe. The filter must not be used any more
--- after an asynchronous exception has been throw during the computation of this
+-- after an asynchronous exception has been thrown during the computation of this
 -- function. If this function is used in the presence of asynchronous exceptions
 -- it should be apprioriately masked.
+--
+-- >>> f <- newCuckooFilter @4 @10 @Int 0 1000
+-- >>> insert f 0
+-- True
+-- >>> insert f 0
+-- True
+-- >>> itemCount f
+-- 2
 --
 insert
     :: forall b f a m
@@ -306,6 +385,14 @@ insert f a = do
 -- false positives is bounded from above by \(\frac{2b}{2^f}\) where @b@ is the number
 -- of items per bucket and @f@ is the size of a fingerprint in bits.
 --
+-- >>> f <- newCuckooFilter @4 @10 @Int 0 1000
+-- >>> insert f 0
+-- True
+-- >>> member f 0
+-- True
+-- >>> member f 1
+-- False
+--
 member
     :: CuckooFilterHash a
     => PrimMonad m
@@ -329,17 +416,38 @@ member f a = checkBucket f b1 fp >>= \case
 -- -------------------------------------------------------------------------- --
 -- Delete
 
--- | Delete an items from the filter.
+-- | Delete an items from the filter. An item that was inserted more than once
+-- can also be deleted more than once.
 --
 -- /IMPORTANT/ An item must only be deleted if it was successfully added to the
 -- filter before (and hasn't been deleted since then).
 --
--- Deleting an item that isn't in the filter will result in the filter returning
+-- Deleting an item that isn't in the filter can result in the filter returning
 -- false negative results.
 --
 -- This function is not thread safe. No concurrent writes must occur while this
 -- function is executed. If this is needed a lock must be used. Concurrent reads
 -- are fine.
+--
+-- >>> f <- newCuckooFilter @4 @10 @Int 0 1000
+-- >>> insert f 0
+-- True
+-- >>> insert f 0
+-- True
+-- >>> itemCount f
+-- 2
+-- >>> delete f 0
+-- True
+-- >>> itemCount f
+-- 1
+-- >>> member f 0
+-- True
+-- >>> delete f 0
+-- True
+-- >>> itemCount f
+-- 0
+-- >>> member f 0
+-- False
 --
 delete
     :: CuckooFilterHash a
