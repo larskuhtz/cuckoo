@@ -60,7 +60,7 @@ runSpellCheck = do
     putStrLn $ show t0 <> "s to count words"
 
     ((f, failed), t1) <- stopWatch $ do
-        f <- C.newCuckooFilter @IO @4 @8 0 500000
+        f <- C.newCuckooFilter @4 @8 0 500000
         failed <- filterM (fmap not . C.insert f) words
         return (f, failed)
 

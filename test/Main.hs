@@ -136,7 +136,7 @@ test0 :: forall a . Variate a => CuckooFilterHash a => Natural -> IO TestResult
 test0 n = do
     rng <- initialize 0
     s <- Salt <$> uniform rng
-    f <- newCuckooFilter @IO @4 @10 @a s n
+    f <- newCuckooFilter @4 @10 @a s n
     let go i fp = do
             x <- uniform rng
             fp' <- bool fp (succ fp) <$> member f x
@@ -155,7 +155,7 @@ test1 :: forall a . CuckooFilterHash a => Num a => Natural -> IO TestResult
 test1 n = do
     rng <- initialize 0
     s <- Salt <$> uniform rng
-    f <- newCuckooFilter @IO @4 @10 @a s n
+    f <- newCuckooFilter @4 @10 @a s n
     let go i fp = do
             let x = int i
             fp' <- bool fp (succ fp) <$> member f x
@@ -174,7 +174,7 @@ test2 :: forall a . CuckooFilterHash a => BA.ByteArray a => Natural -> IO TestRe
 test2 n = do
     rng <- initialize 0
     s <- Salt <$> uniform rng
-    f <- newCuckooFilter @IO @4 @10 @a s n
+    f <- newCuckooFilter @4 @10 @a s n
     let go i fp = do
             let x = BA.pack (castEnum <$> show i)
             fp' <- bool fp (succ fp) <$> member f x
@@ -193,7 +193,7 @@ test3 :: forall a . CuckooFilterHash a => BA.ByteArray a => Natural -> IO TestRe
 test3 n = do
     rng <- initialize 0
     s <- Salt <$> uniform rng
-    f <- newCuckooFilter @IO @4 @10 @a s n
+    f <- newCuckooFilter @4 @10 @a s n
     let go i x fp
             | int i >= int @_ @Double n * 95 / 100 = return (i, x, fp)
         go i x fp = do
