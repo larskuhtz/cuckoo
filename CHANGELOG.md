@@ -1,5 +1,9 @@
 # Revision history for cuckoo
 
+## 0.2.0.1 -- 2019-08-20
+
+* Fixed and improved example.
+
 ## 0.2.0.0 -- 2019-08-20
 
 * The PRNG from the random package is new the default. Added cabal flags for
@@ -8,7 +12,7 @@
 * Changed order of type parameters for `newCuckooHash`. The type of the monad is
   moved to the end, because its usually inferred from the context.
 
-* Minimum capacity (in items) parameter is now 64.
+* Capacity (in items) parameter must be at least 64.
 
 * Fixed the result of `sizeInAllocatedBytes`.
 

@@ -46,6 +46,7 @@ cabal v2-bench cuckoo
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 import Control.Monad (filterM)
 import Data.Cuckoo
@@ -60,25 +61,30 @@ main = do
     f <- newCuckooFilter @4 @8 @Int 0 500000
 
     -- Insert 450000 items
-    failed <- filterM (fmap not . insert f) [0..450000]
+    failed <- filterM (fmap not . insert f) [0..500000-1]
 
     -- Query inserted items
-    missing <- filterM (fmap not . member f) [0..450000]
+    missing <- filterM (fmap not . member f) [0..500000-1]
+
+    -- Test for false positives
+    false <- filterM (member f) [500000..1000000 - 1]
 
     -- Report results
     putStrLn $ "failed inserts: " <> show (length failed)
-    putStrLn $ "false positives: " <> show (length $ failed \\ missing)
-    putStrLn $ "missing: " <> show (length $ missing \\ failed)
-    c <- itemCount f
+    putStrLn $ "false positives: " <> show (length false)
+    putStrLn $ "false positive rate (%): " <> show @Double (fromIntegral (length false) * 100 / 500000)
+    putStrLn $ "missing (must be 0): " <> show (length $ missing \\ failed)
 
-    -- some properties of the filter
+    -- Filter properties
     putStrLn $ "capacity: " <> show (capacityInItems f)
     putStrLn $ "size in allocated bytes: " <> show (sizeInAllocatedBytes f)
 
-    -- computing the following is slow
+    -- computing the following is a bit slow
+    c <- itemCount f
     putStrLn $ "item count: " <> show c
     lf <- loadFactor f
-    putStrLn $ "load factor: " <> show lf
+    putStrLn $ "load factor (%): " <> show lf
+    putStrLn $ "bits per item: " <> show @Double (fromIntegral (sizeInAllocatedBytes f) * 8 / fromIntegral c)
 ```
 
 Which produces the following results:
@@ -89,12 +95,14 @@ $ ghc -o main -threaded -O -with-rtsopts=-N Main.hs
 Linking main ...
 $ ./main
 failed inserts: 0
-false positives: 0
-missing: 0
+false positives: 14796
+false postive rate (%): 2.9592
+missing (must be 0): 0
 capacity: 524288
 size in allocated bytes: 524292
-item count: 450001
-load factor: 85.83087921142578
+item count: 500000
+load factor (%): 95.367431640625
+bits per item: 8.388672
 ```
 
 Another example can be found in the file
