@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/larskuhtz/cuckoo.svg?branch=master)](https://travis-ci.org/larskuhtz/cuckoo)
+[![Hackage](https://img.shields.io/hackage/v/cuckoo.svg?logo=haskell)](https://hackage.haskell.org/package/cuckoo)
 
 Haskell implementation of Cuckoo filters as described in
 
