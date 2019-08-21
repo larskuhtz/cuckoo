@@ -67,15 +67,36 @@ main = do
 
     -- Report results
     putStrLn $ "failed inserts: " <> show (length failed)
-    putStrLn $ "FAILURE: missing " <> show (length $ missing \\ failed)
     putStrLn $ "false positives: " <> show (length $ failed \\ missing)
+    putStrLn $ "missing: " <> show (length $ missing \\ failed)
     c <- itemCount f
-    putStrLn $ "item count: " <> show c
+
+    -- some properties of the filter
     putStrLn $ "capacity: " <> show (capacityInItems f)
+    putStrLn $ "size in allocated bytes: " <> show (sizeInAllocatedBytes f)
+
+    -- computing the following is slow
+    putStrLn $ "item count: " <> show c
     lf <- loadFactor f
     putStrLn $ "load factor: " <> show lf
-    putStrLn $ "size in allocated bytes: " <> show (sizeInAllocatedBytes f)
 ```
 
-Another example can be found the file `bench/SpellChecker.hs`.
+Which produces the following results:
+
+```bash
+$ ghc -o main -threaded -O -with-rtsopts=-N Main.hs
+[1 of 1] Compiling Main             ( Main.hs, Main.o )
+Linking main ...
+$ ./main
+failed inserts: 0
+false positives: 0
+missing: 0
+capacity: 524288
+size in allocated bytes: 524292
+item count: 450001
+load factor: 85.83087921142578
+```
+
+Another example can be found in the file
+[bench/SpellChecker.hs](https://github.com/larskuhtz/cuckoo/blob/master/bench/SpellChecker.hs).
 

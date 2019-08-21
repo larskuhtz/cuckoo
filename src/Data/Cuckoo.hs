@@ -56,14 +56,18 @@
 -- >
 -- >     -- Report results
 -- >     putStrLn $ "failed inserts: " <> show (length failed)
--- >     putStrLn $ "FAILURE: missing " <> show (length $ missing \\ failed)
 -- >     putStrLn $ "false positives: " <> show (length $ failed \\ missing)
+-- >     putStrLn $ "missing: " <> show (length $ missing \\ failed)
 -- >     c <- itemCount f
--- >     putStrLn $ "item count: " <> show c
+-- >
+-- >     -- some properties of the filter
 -- >     putStrLn $ "capacity: " <> show (capacityInItems f)
+-- >     putStrLn $ "size in allocated bytes: " <> show (sizeInAllocatedBytes f)
+-- >
+-- >     -- computing the following is slow
+-- >     putStrLn $ "item count: " <> show c
 -- >     lf <- loadFactor f
 -- >     putStrLn $ "load factor: " <> show lf
--- >     putStrLn $ "size in allocated bytes: " <> show (sizeInAllocatedBytes f)
 --
 module Data.Cuckoo
 (
