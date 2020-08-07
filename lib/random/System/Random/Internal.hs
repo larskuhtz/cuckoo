@@ -57,7 +57,12 @@ initialize salt = MWC.initialize (singleton $ fromIntegral salt)
 
 import Control.Monad.Primitive
 import Data.STRef
+
+#if MIN_VERSION_random(1,2,0)
+import System.Random hiding (uniform, uniformR)
+#else
 import System.Random
+#endif
 
 type Variate a = (Random a)
 
