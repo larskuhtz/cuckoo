@@ -57,7 +57,7 @@ library random-internal
         -Wall
     build-depends:
           base >=4.11 && <4.15
-        , primitive >=0.7
+        , primitive >=0.6.4.0
 
     if flag(pcg-random)
         build-depends:
@@ -86,7 +86,7 @@ library
         -- external
         , base >=4.11 && <4.15
         , memory >=0.14
-        , primitive >=0.7
+        , primitive >=0.6.4.0
         , vector >=0.12
 
 test-suite tests
