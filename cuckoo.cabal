@@ -123,8 +123,11 @@ test-suite doctests
         -with-rtsopts=-N
     main-is: doctest.hs
     build-depends:
-          base >=4.11 && <4.15
+          cuckoo
+        , base >=4.11 && <4.15
         , doctest >= 0.16
+        , memory >=0.14
+        , primitive >=0.6.4.0
 
 benchmark spellchecker
     type: exitcode-stdio-1.0

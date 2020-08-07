@@ -1,0 +1,97 @@
+name: Build
+
+on:
+  push:
+  schedule:
+    - cron: '0 8 * * *'
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ghc: ['8.6.5', '8.8.3', '8.10.1']
+        cabal: ['3.2.0.0']
+        os: 
+        - 'ubuntu-16.04'
+        - 'ubuntu-18.04'
+        - 'macOS-latest'
+        # - 'windows-latest' # windows builds generally work but are flaky on the github runners
+
+    steps:
+
+    # Setup
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install GHC and Cabal
+      uses: actions/setup-haskell@v1.1.2
+      with:
+         ghc-version: ${{ matrix.ghc }}
+         cabal-version: ${{ matrix.cabal }}
+    - name: Configure project
+      shell: bash
+      run: |
+        cat > cabal.project.local <<EOF
+        package merkle-log
+          documentation: True
+          benchmarks: True
+          tests: True
+        write-ghc-environment-files: always
+        EOF
+
+    - name: Install word list
+      if: contains(matrix.os, 'ubuntu')
+      run: sudo apt-get install -y wamerican
+
+    # Restore Packages from Caches
+    - uses: actions/cache@v2.1.0
+      name: Cache ~/.cabal/packages
+      with:
+        path: ~/.cabal/packages
+        key: ${{ runner.os }}-${{ matrix.ghc }}-packages-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.ghc }}-packages-
+          ${{ runner.os }}-${{ matrix.ghc }}-packages
+    - uses: actions/cache@v2.1.0
+      name: Cache ~/.cabal/store
+      with:
+        path: ~/.cabal/store
+        key: ${{ runner.os }}-${{ matrix.ghc }}-store-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.ghc }}-store-
+          ${{ runner.os }}-${{ matrix.ghc }}-store
+    - uses: actions/cache@v2.1.0
+      name: Cache dist-newstyle
+      with:
+        path: dist-newstyle
+        key: ${{ runner.os }}-${{ matrix.ghc }}-dist-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.ghc }}-dist-
+          ${{ runner.os }}-${{ matrix.ghc }}-dist
+
+    # Build
+    - name: Update package database
+      run: cabal v2-update
+    - name: Configure build
+      run: |
+        cabal v2-build all --dry-run
+        cabal v2-freeze
+    - name: Install build dependencies
+      run: cabal v2-build --only-dependencies
+    - name: Build library
+      run: cabal v2-build
+
+    # Tests
+    - name: Run Tests
+      run: cabal v2-test
+
+    # Benchmarks
+    - name: Run Benchmarks
+      run: cabal v2-bench internal-benchmarks
+    - name: Run Spellchecker Benchmarks
+      if: "! contains(matrix.os, 'windows')"
+      run: cabal v2-bench spellchecker
+
