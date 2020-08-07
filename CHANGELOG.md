@@ -1,5 +1,13 @@
 # Revision history for cuckoo
 
+## 0.2.1 -- 2020-08-06
+
+* Support random-1.2.0
+
+* Fix doctest test-suite
+
+* Relax lower bound of primitive to 0.6.4.0
+
 ## 0.2.0.1 -- 2019-08-20
 
 * Fixed and improved example.

@@ -1,6 +1,6 @@
 cabal-version: 2.2
 name: cuckoo
-version: 0.2.0.1
+version: 0.2.1
 synopsis: Haskell Implementation of Cuckoo Filters
 Description:
     Haskell implementation of Cuckoo filters as described in
@@ -25,11 +25,12 @@ license: BSD-3-Clause
 license-file: LICENSE
 author: Lars Kuhtz
 maintainer: lakuhtz@gmail.com
-copyright: Copyright (c) 2019, Lars Kuhtz <lakuhtz@gmail.com>
+copyright: Copyright (c) 2019-2020 Lars Kuhtz <lakuhtz@gmail.com>
 category: Data
 tested-with:
-      GHC==8.6.5
-      GHC==8.4.4
+    GHC==8.10.1
+    GHC==8.8.4
+    GHC==8.6.5
 extra-source-files:
     README.md
     CHANGELOG.md
