@@ -4,6 +4,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 
@@ -126,7 +127,7 @@ import Numeric.Natural
 
 import Prelude hiding (null)
 
-import System.Random.Internal
+import "cuckoo" System.Random.Internal
 
 import Text.Printf
 

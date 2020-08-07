@@ -66,8 +66,11 @@ int = fromIntegral
 --
 -- For instance,
 --
--- prop> fit 7 3 == 3
--- prop> fit 6 3 == 2
+-- >>> fit 7 3
+-- 3
+--
+-- >>> fit 6 3
+-- 2
 --
 fit :: Real a => Real b => Integral c => a -> b -> c
 fit a b = ceiling @Double $ realToFrac a / realToFrac b
@@ -78,8 +81,11 @@ fit a b = ceiling @Double $ realToFrac a / realToFrac b
 --
 -- For instance,
 --
--- prop> fit 7 3 == 3
--- prop> fit 6 3 == 2
+-- >>> intFit 7 3
+-- 3
+--
+-- >>> intFit 6 3
+-- 2
 --
 intFit :: Integral a => Integral b => a -> b -> a
 intFit a b = 1 + (a - 1) `div` int b
