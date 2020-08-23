@@ -86,7 +86,11 @@ jobs:
 
     # Tests
     - name: Run Tests
-      run: cabal v2-test
+      run: cabal v2-test test:tests
+    - name: Run doctest Tests
+      # doctest is broken on ubuntu-16.04 for ghc-8.6.5: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.27' not found (required by /home/runner/.cabal/store/ghc-8.6.5/cassava-0.5.2.0
+      if: "! (matrix.ghc == '8.6.5' && matrix.os == 'ubuntu-16.04')"
+      run: cabal v2-test test:doctests
 
     # Benchmarks
     - name: Run Benchmarks
