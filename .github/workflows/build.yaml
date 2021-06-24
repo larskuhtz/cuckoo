@@ -44,9 +44,6 @@ jobs:
     - name: Install word list
       if: contains(matrix.os, 'ubuntu')
       run: sudo apt-get install -y wamerican
-    - name: Install tinfo-devel (doctest depends on it)
-      if: contains(matrix.os, 'ubuntu')
-      run: sudo apt-get install -y libtinfo-dev
 
     # Restore Packages from Caches
     - uses: actions/cache@v2.1.6
