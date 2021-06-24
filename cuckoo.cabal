@@ -125,7 +125,7 @@ test-suite doctests
     build-depends:
         , cuckoo
         , base >=4.11 && <4.16
-        , doctest >= 0.16
+        , doctest >= 0.18
         , memory >=0.14
         , primitive >=0.6.4.0
 

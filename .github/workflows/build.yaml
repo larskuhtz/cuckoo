@@ -35,6 +35,7 @@ jobs:
       shell: bash
       run: |
         cat > cabal.project.local <<EOF
+        write-ghc-environment-files: always
         package merkle-log
           documentation: True
           benchmarks: True
