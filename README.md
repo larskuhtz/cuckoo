@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/larskuhtz/cuckoo.svg?branch=master)](https://travis-ci.org/larskuhtz/cuckoo)
 [![Hackage](https://img.shields.io/hackage/v/cuckoo.svg?logo=haskell)](https://hackage.haskell.org/package/cuckoo)
 
 Haskell implementation of Cuckoo filters as described in
@@ -25,19 +24,19 @@ functions for computing the primary hash and fingerprint.
 ## Installation
 
 ```bash
-cabal v2-install cuckoo
+cabal install cuckoo
 ```
 
 For running the test-suites
 
 ```bash
-cabal v2-test cuckoo
+cabal test cuckoo
 ```
 
 For running the benchmarks
 
 ```bash
-cabal v2-bench cuckoo
+cabal bench cuckoo
 ```
 
 ## Example

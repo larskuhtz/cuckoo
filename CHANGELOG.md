@@ -1,5 +1,9 @@
 # Revision history for cuckoo
 
+## 0.2.2 -- 2021-06-24
+
+* Support GHC-9
+
 ## 0.2.1 -- 2020-08-06
 
 * Support random-1.2.0
