@@ -13,10 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ghc: ['8.6.5', '8.8.4', '8.10.2']
-        cabal: ['3.2.0.0']
-        os: 
-        - 'ubuntu-16.04'
+        ghc: ['8.8.4', '8.10.5', '9.0.1']
+        cabal: ['3.4']
+        os:
         - 'ubuntu-18.04'
         - 'ubuntu-20.04'
         - 'macOS-latest'
@@ -28,7 +27,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
     - name: Install GHC and Cabal
-      uses: actions/setup-haskell@v1.1.2
+      uses: haskell/actions/setup@v1.2.3
       with:
          ghc-version: ${{ matrix.ghc }}
          cabal-version: ${{ matrix.cabal }}
@@ -40,7 +39,6 @@ jobs:
           documentation: True
           benchmarks: True
           tests: True
-        write-ghc-environment-files: always
         EOF
 
     - name: Install word list
@@ -51,55 +49,40 @@ jobs:
       run: sudo apt-get install -y libtinfo-dev
 
     # Restore Packages from Caches
-    - uses: actions/cache@v2.1.0
-      name: Cache ~/.cabal/packages
-      with:
-        path: ~/.cabal/packages
-        key: ${{ runner.os }}-${{ matrix.ghc }}-packages-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.ghc }}-packages-
-          ${{ runner.os }}-${{ matrix.ghc }}-packages
-    - uses: actions/cache@v2.1.0
-      name: Cache ~/.cabal/store
-      with:
-        path: ~/.cabal/store
-        key: ${{ runner.os }}-${{ matrix.ghc }}-store-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.ghc }}-store-
-          ${{ runner.os }}-${{ matrix.ghc }}-store
-    - uses: actions/cache@v2.1.0
+    - uses: actions/cache@v2.1.6
       name: Cache dist-newstyle
       with:
-        path: dist-newstyle
-        key: ${{ runner.os }}-${{ matrix.ghc }}-dist-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.ghc }}-dist-
-          ${{ runner.os }}-${{ matrix.ghc }}-dist
+        path: |
+          ~/.cabal/packages
+          ~/.cabal/store
+          dist-newstyle
+        key: ${{ matrix.os }}-${{ matrix.ghc }}-0-cabal
 
     # Build
     - name: Update package database
-      run: cabal v2-update
+      run: cabal update
     - name: Configure build
       run: |
-        cabal v2-build all --dry-run
-        cabal v2-freeze
+        cabal build all --dry-run
+        cabal freeze
     - name: Install build dependencies
-      run: cabal v2-build --only-dependencies
+      run: cabal build --only-dependencies
     - name: Build library
-      run: cabal v2-build
+      run: cabal build
 
     # Tests
     - name: Run Tests
-      run: cabal v2-test test:tests
+      run: cabal test test:tests
     - name: Run doctest Tests
-      # doctest is flaky on ghc-8.6.5: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.27' not found (required by /home/runner/.cabal/store/ghc-8.6.5/cassava-0.5.2.0
-      if: "! (matrix.ghc == '8.6.5')"
-      run: cabal v2-test test:doctests
+      # doctest is flaky on old versions of ubuntu:
+      # libtinfo.so.6: cannot open shared object file: No such file or directory
+      if: "matrix.os != 'ubuntu-18.04'"
+      run: cabal test test:doctests
 
     # Benchmarks
     - name: Run Benchmarks
-      run: cabal v2-bench internal-benchmarks
+      run: cabal bench internal-benchmarks
     - name: Run Spellchecker Benchmarks
       if: "! contains(matrix.os, 'windows')"
-      run: cabal v2-bench spellchecker
+      run: cabal bench spellchecker
 

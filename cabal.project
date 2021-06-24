@@ -2,3 +2,4 @@ packages: .
 
 package cuckoo
     optimization: 1
+
