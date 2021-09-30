@@ -27,21 +27,11 @@ module Data.Cuckoo.Internal
 , intNextPowerOfTwo
 , set
 , get
-
--- * Hash functions
-, sip
-, fnv1a
-, fnv1a_bytes
-, sip_bytes
-, sip2
 ) where
 
 import Control.Monad.Primitive
 
 import Data.Bits
-import qualified Data.ByteArray as BA
-import qualified Data.ByteArray.Hash as BA
-import qualified Data.ByteArray.Pack as BA
 import Data.Primitive.ByteArray
 
 import Foreign
@@ -105,89 +95,6 @@ intNextPowerOfTwo :: Int -> Int
 intNextPowerOfTwo 0 = 1
 intNextPowerOfTwo x = 1 `unsafeShiftL` (finiteBitSize x - countLeadingZeros (x - 1))
 {-# INLINE intNextPowerOfTwo #-}
-
--- | Computes a 64 bit Fnv1a hash for a value that has an 'Storable' instance.
---
--- The first argument is use as a salt.
---
-fnv1a
-    :: Storable a
-    => Int
-        -- ^ Salt
-    -> a
-        -- ^ Value that is hashes
-    -> Word64
-fnv1a s x = r
-  where
-    Right (BA.FnvHash64 r) = BA.fnv1a_64Hash
-        <$> BA.fill @BA.Bytes (8 + sizeOf x) (BA.putStorable s >> BA.putStorable x)
-{-# INLINE fnv1a #-}
-
--- | Computes a 64 bit Fnv1a hash for a value that is an instance of
--- 'BA.ByteArrayAccess'.
---
--- The first argument is use as a salt.
---
-fnv1a_bytes
-    :: BA.ByteArrayAccess a
-    => Int
-        -- ^ Salt
-    -> a
-        -- ^ Value that is hashes
-    -> Word64
-fnv1a_bytes s x = r
-  where
-    Right (BA.FnvHash64 r) = BA.fnv1a_64Hash
-        <$> BA.fill @BA.Bytes (8 + BA.length x) (BA.putStorable s >> BA.putBytes x)
-{-# INLINE fnv1a_bytes #-}
-
--- | Computes a Sip hash for a value that has an 'Storable' instance.
---
--- The first argument is a salt value that is used to derive the key for the
--- hash computation.
---
-sip
-    :: Storable a
-    => Int
-        -- ^ Salt
-    -> a
-        -- ^ Value that is hashes
-    -> Word64
-sip s x = r
-  where
-    Right (BA.SipHash r) = BA.sipHash (BA.SipKey (int s) 914279)
-        <$> BA.fill @BA.Bytes (sizeOf x) (BA.putStorable x)
-{-# INLINE sip #-}
-
--- | Computes a Sip hash for a value that is an instance of
--- 'BA.ByteArrayAccess'.
---
--- The first argument is a salt value that is used to derive the key for the
--- hash computation.
---
-sip_bytes
-    :: BA.ByteArrayAccess a
-    => Int
-        -- ^ Salt
-    -> a
-        -- ^ Value that is hashes
-    -> Word64
-sip_bytes s x = r
-  where
-    Right (BA.SipHash r) = BA.sipHash (BA.SipKey (int s) 1043639)
-        <$> BA.fill @BA.Bytes (BA.length x) (BA.putBytes x)
-{-# INLINE sip_bytes #-}
-
--- | An version of a Sip hash that is used internally. In order to avoid
--- dependencies between different hash computations, it shouldn't be used in the
--- implementation of instances of 'Data.Cuckoo.CuckooFilterHash'.
---
-sip2 :: Storable a => Int -> a -> Word64
-sip2 s x = r
-  where
-    Right (BA.SipHash r) = BA.sipHash (BA.SipKey 994559 (int s * 713243))
-        <$> BA.fill @BA.Bytes (sizeOf x) (BA.putStorable x)
-{-# INLINE sip2 #-}
 
 -- | Write a 'Word64' value into a 'Word32' aligned 'MutableByteArray'
 --

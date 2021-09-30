@@ -83,10 +83,12 @@ module Data.Cuckoo
 , CuckooFilterHash(..)
 
 -- ** Hash functions
-, sip
-, sip_bytes
-, fnv1a
-, fnv1a_bytes
+, saltedSipHashStorable
+, saltedSipHashByteString
+, saltedSipHashPtr
+, saltedFnv1aStorable
+, saltedFnv1aByteString
+, saltedFnv1aPtr
 
 -- * Cuckoo Filter
 , CuckooFilter
@@ -134,6 +136,7 @@ import Text.Printf
 -- internal modules
 
 import Data.Cuckoo.Internal
+import Data.Cuckoo.Internal.HashFunctions
 
 -- $setup
 -- >>> :set -XTypeApplications -XDataKinds -XTypeFamilies
@@ -204,14 +207,14 @@ class CuckooFilterHash a where
     -- of 'Storable'.
     --
     default cuckooHash :: Storable a => Salt -> a -> Word64
-    cuckooHash (Salt s) a = sip s a
+    cuckooHash (Salt s) = saltedSipHashStorable s
     {-# INLINE cuckooHash #-}
 
     -- | Default implementation of 'cuckooFingerprint' for types that are an
     -- instance of 'Storable'.
     --
     default cuckooFingerprint :: Storable a => Salt -> a -> Word64
-    cuckooFingerprint (Salt s) a = fnv1a s a
+    cuckooFingerprint (Salt s) = saltedFnv1aStorable s
     {-# INLINE cuckooFingerprint #-}
 
 -- -------------------------------------------------------------------------- --
@@ -494,7 +497,7 @@ newtype Slot = Slot Int
 -- isn't independent from this one.
 --
 hashFingerprint :: Salt -> Fingerprint f -> Int
-hashFingerprint (Salt s) (Fingerprint a) = int $! sip2 s a
+hashFingerprint (Salt s) (Fingerprint a) = int $! sipHashInternal s a
 {-# INLINE hashFingerprint #-}
 
 mkFingerprint
@@ -509,12 +512,12 @@ mkFingerprint salt a = Fingerprint $! max 1 $!
 {-# INLINE mkFingerprint #-}
 
 bucket1 :: CuckooFilterHash a => CuckooFilter s b f a -> a -> Bucket
-bucket1 f a = Bucket $! int $! cuckooHash (_cfSalt f) a .&. (int $ _cfBucketCount f - 1)
+bucket1 f a = Bucket $! int $! cuckooHash (_cfSalt f) a .&. int (_cfBucketCount f - 1)
 {-# INLINE bucket1 #-}
 
 otherBucket :: CuckooFilter s b f a -> Bucket -> Fingerprint f -> Bucket
 otherBucket f (Bucket b) fp = Bucket $!
-    (b `xor` hashFingerprint (_cfSalt f) fp) .&. (int $ _cfBucketCount f - 1)
+    (b `xor` hashFingerprint (_cfSalt f) fp) .&. int (_cfBucketCount f - 1)
 {-# INLINE otherBucket #-}
 
 ix :: Bucket -> Int
