@@ -1,5 +1,26 @@
 # Revision history for cuckoo
 
+## 0.3.0 -- 2021-09-30
+
+*   Rename hash functions provided hash functions to
+
+    *   `saltedSipHashStorable`
+    *   `saltedSipHashByteString`
+    *   `saltedSipHashPtr`
+    *   `saltedFnv1aStorable`
+    *   `saltedFnv1aByteString`
+    *   `saltedFnv1aPtr`
+
+*   Use [hashes](https://hackage.haskell.org/package/hashes) package for hash
+    functions and drop dependency on
+    [memory](https://hackage.haskell.org/package/memory).
+
+    The [bytestring](https://hackage.haskell.org/package/bytestring) package is
+    is added as a new dependency.
+
+*   Move implementation of hash functions from
+    `Data.Cuckoo.Internal` to `Data.Cuckoo.Internal.HashFunctions`.
+
 ## 0.2.2 -- 2021-06-24
 
 * Support GHC-9

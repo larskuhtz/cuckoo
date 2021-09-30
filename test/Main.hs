@@ -12,7 +12,7 @@
 
 -- |
 -- Module: Main
--- Copyright: Copyright © 2019 Lars Kuhtz <lakuhtz@gmail.com>
+-- Copyright: Copyright © 2019-2021 Lars Kuhtz <lakuhtz@gmail.com>
 -- License: BSD3
 -- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 -- Stability: experimental

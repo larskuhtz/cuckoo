@@ -4,9 +4,9 @@
 
 -- |
 -- Module: Data.Cuckoo.Internal.HashFunctions
--- Copyright: Copyright © 2021 Kadena LLC.
--- License: MIT
--- Maintainer: Lars Kuhtz <lars@kadena.io>
+-- Copyright: Copyright © 2021 Lars Kuhtz <lakuhtz@gmail.com>
+-- License: BSD3
+-- Maintainer: Lars Kuhtz <lakuhtz@gmail.com>
 -- Stability: experimental
 --
 module Data.Cuckoo.Internal.HashFunctions

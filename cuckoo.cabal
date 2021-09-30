@@ -1,6 +1,6 @@
 cabal-version: 2.4
 name: cuckoo
-version: 0.2.2
+version: 0.3.0
 synopsis: Haskell Implementation of Cuckoo Filters
 Description:
     Haskell implementation of Cuckoo filters as described in
