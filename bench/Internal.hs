@@ -36,7 +36,9 @@ import Data.Cuckoo.Internal
 
 main :: IO ()
 main = do
+    putStrLn "prop_fit"
     quickCheck prop_fit
+    putStrLn "prop_p2"
     quickCheck prop_p2
     defaultMain
         [ bgroup "fit"
@@ -117,8 +119,8 @@ integralP2_2 x
 
 -- Ignore negative values
 --
-prop_p2 :: NonNegative Int -> Property
-prop_p2 (NonNegative x)
+prop_p2 :: Positive Int -> Property
+prop_p2 (Positive x)
     = floatingP2 x === integralP2_0 x
     .&&. floatingP2 x === integralP2_1 x
     .&&. floatingP2 x === integralP2_2 x

@@ -21,7 +21,6 @@ module Main
 import Control.Monad (filterM, unless)
 import Control.StopWatch
 
-import Data.ByteArray ()
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Cuckoo as C
 import Data.List ((\\))
@@ -38,8 +37,8 @@ import Prelude hiding (words)
 --     {-# INLINE cuckooFingerprint #-}
 
 instance C.CuckooFilterHash B.ByteString where
-    cuckooHash (C.Salt s) = C.fnv1a_bytes s
-    cuckooFingerprint (C.Salt s) = C.sip_bytes s
+    cuckooHash (C.Salt s) = C.saltedFnv1aByteString s
+    cuckooFingerprint (C.Salt s) = C.saltedSipHashByteString s
     {-# INLINE cuckooHash #-}
     {-# INLINE cuckooFingerprint #-}
 
