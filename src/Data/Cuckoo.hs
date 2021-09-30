@@ -140,7 +140,14 @@ import Data.Cuckoo.Internal.HashFunctions
 
 -- $setup
 -- >>> :set -XTypeApplications -XDataKinds -XTypeFamilies
--- >>> instance CuckooFilterHash Int
+-- >>> :{
+-- instance CuckooFilterHash Int where
+--     -- can't use default implementation with doctest because of a bug in GHC-9
+--     cuckooHash (Salt s) a = saltedFnv1aStorable s a
+--     cuckooFingerprint (Salt s) a = saltedSipHashStorable s a
+--     {-# INLINE cuckooHash #-}
+--     {-# INLINE cuckooFingerprint #-}
+-- :}
 
 -- -------------------------------------------------------------------------- --
 -- Hash Functions
@@ -159,7 +166,7 @@ import Data.Cuckoo.Internal.HashFunctions
 -- implementation of fnv.
 --
 -- Because of the variying quality and properties of the functions, absence of
--- any control over which function is use, and no guarantees with respect to
+-- any control over which function is used, and no guarantees with respect to
 -- stability accross versions, we don't use that package altogether.
 --
 
@@ -177,7 +184,14 @@ newtype Salt = Salt Int
 -- The default implementations use sip hash for 'cuckooHash' and 'fnv1a' (64
 -- bit) for 'cuckooFingerprint' and require an instance of 'Storable'.
 --
--- >>> instance CuckooFilterHash Int
+-- >>> :{
+-- instance CuckooFilterHash Int where
+--     -- can't use default implementation with doctest because of a bug in GHC-9
+--     cuckooHash (Salt s) a = saltedFnv1aStorable s a
+--     cuckooFingerprint (Salt s) a = saltedSipHashStorable s a
+--     {-# INLINE cuckooHash #-}
+--     {-# INLINE cuckooFingerprint #-}
+-- :}
 --
 -- The following example uses the hash functions that are provided in this
 -- module to define an instance for 'B.ByteString':
@@ -185,8 +199,8 @@ newtype Salt = Salt Int
 -- >>> import qualified Data.ByteString as B
 -- >>> :{
 -- instance CuckooFilterHash B.ByteString where
---     cuckooHash (Salt s) a = fnv1a_bytes s a
---     cuckooFingerprint (Salt s) a = sip_bytes s a
+--     cuckooHash (Salt s) a = saltedFnv1aByteString s a
+--     cuckooFingerprint (Salt s) a = saltedSipHashByteString s a
 --     {-# INLINE cuckooHash #-}
 --     {-# INLINE cuckooFingerprint #-}
 -- :}
