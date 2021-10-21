@@ -1,6 +1,9 @@
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 -- |
 -- Module: Data.Cuckoo.Internal.HashFunctions
@@ -26,7 +29,7 @@ module Data.Cuckoo.Internal.HashFunctions
 ) where
 
 import qualified Data.ByteString as B
-import Data.Hash.FNV1
+import Data.Hash.FNV1.Salted
 import Data.Hash.SipHash
 
 import Foreign
@@ -48,9 +51,10 @@ saltedFnv1aPtr
         -- ^ Bytes that are hashed
     -> Int
         -- ^ Number of bytes
-    -> Word64
-saltedFnv1aPtr s p ps = hashPtr_ fnv1a_64_ p ps
-    $! hashStorable fnv1a_64 s
+    -> IO Word64
+saltedFnv1aPtr s p l = do
+    Fnv1a64Hash !h <- hashPtr (fromIntegral s) p l
+    return h
 {-# INLINE saltedFnv1aPtr #-}
 
 -- | Computes a 64 bit Fnv1a hash for a value that has an 'Storable' instance.
@@ -64,8 +68,8 @@ saltedFnv1aStorable
     -> a
         -- ^ Value that is hashed
     -> Word64
-saltedFnv1aStorable s x = hashStorable_ fnv1a_64_ x
-    $! hashStorable fnv1a_64 s
+saltedFnv1aStorable s b =
+    let Fnv1a64Hash !h = hashStorable (fromIntegral s) b in h
 {-# INLINE saltedFnv1aStorable #-}
 
 saltedFnv1aByteString
@@ -74,8 +78,8 @@ saltedFnv1aByteString
     -> B.ByteString
         -- ^ Bytes that are hashed
     -> Word64
-saltedFnv1aByteString s b = hashByteString_ fnv1a_64_ b
-    $! hashStorable fnv1a_64 s
+saltedFnv1aByteString s b =
+    let Fnv1a64Hash !h = hashByteString (fromIntegral s) b in h
 {-# INLINE saltedFnv1aByteString #-}
 
 -- -------------------------------------------------------------------------- --
@@ -93,8 +97,10 @@ saltedSipHashPtr
         -- ^ Bytes that is hashed
     -> Int
         -- ^ Number of bytes
-    -> Word64
-saltedSipHashPtr s ptr l = hashPtr (sipHash24 (int s) 1043639) ptr l
+    -> IO Word64
+saltedSipHashPtr s ptr l = do
+    SipHash !h <- hashPtr @(SipHash 2 4) (SipHashKey (int s) 1043639) ptr l
+    return h
 {-# INLINE saltedSipHashPtr #-}
 
 -- | Computes a Sip hash for a value that has an 'Storable' instance.
@@ -109,7 +115,9 @@ saltedSipHashStorable
     -> a
         -- ^ Value that is hashed
     -> Word64
-saltedSipHashStorable s = hashStorable (sipHash24 (int s) 914279)
+saltedSipHashStorable s b =
+    let SipHash !h = hashStorable @(SipHash 2 4) (SipHashKey (int s) 914279) b
+    in h
 {-# INLINE saltedSipHashStorable #-}
 
 -- | Computes a Sip hash for a value that has an 'Storable' instance.
@@ -123,7 +131,9 @@ saltedSipHashByteString
     -> B.ByteString
         -- ^ Value that is hashed
     -> Word64
-saltedSipHashByteString s = hashByteString (sipHash24 (int s) 914279)
+saltedSipHashByteString s b =
+    let SipHash !h = hashByteString @(SipHash 2 4) (SipHashKey (int s) 914279) b
+    in h
 {-# INLINE saltedSipHashByteString #-}
 
 -- -------------------------------------------------------------------------- --
@@ -134,6 +144,8 @@ saltedSipHashByteString s = hashByteString (sipHash24 (int s) 914279)
 -- implementation of instances of 'Data.Cuckoo.CuckooFilterHash'.
 --
 sipHashInternal :: Storable a => Int -> a -> Word64
-sipHashInternal s = hashStorable (sipHash24 994559 (int s * 713243))
+sipHashInternal s b =
+    let SipHash !h = hashStorable @(SipHash 2 4) (SipHashKey 994559 (int s * 713243)) b
+    in h
 {-# INLINE sipHashInternal #-}
 
