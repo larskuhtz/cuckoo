@@ -1,5 +1,12 @@
 # Revision history for cuckoo
 
+## 0.3.1 -- 2021-10-20
+
+*   Change signatures of `saltedFnv1aPtr` and `saltedSipHashPtr` to
+    run in `IO`.
+*   Raise lower bound on hashes package to 0.2.
+
+
 ## 0.3.0 -- 2021-09-30
 
 *   Rename hash functions provided hash functions to
