@@ -6,3 +6,4 @@ package cuckoo
 
 package hashes
     optimization: 2
+    flags: -with-openssl
